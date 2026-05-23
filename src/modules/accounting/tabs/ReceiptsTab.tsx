@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
-import { Plus } from 'lucide-react'
+import { Plus, Printer } from 'lucide-react'
 import { accountingAPI, partiesAPI } from '@/services/api'
 import useUIStore from '@/store/uiStore'
 import { Button, Modal, Badge, Pagination, SkeletonRows, Empty } from '@/components/ui'
@@ -101,6 +101,7 @@ function VoucherListTab({ apiCall, type, title }: {
   const [page,    setPage]    = useState(1)
   const [loading, setLoading] = useState(false)
   const [modal,   setModal]   = useState(false)
+  const [listPrintData, setListPrintData] = useState<PrintData | null>(null)
   const [accounts, setAccounts] = useState<Account[]>([])
   const [parties,  setParties]  = useState<Party[]>([])
 
@@ -136,11 +137,11 @@ function VoucherListTab({ apiCall, type, title }: {
         <div className="overflow-x-auto">
           <table className="erp-table">
             <thead>
-              <tr><th>Voucher No</th><th>Date</th><th>Party</th><th>Narration</th><th className="td-right">Amount</th><th>Status</th></tr>
+              <tr><th>Voucher No</th><th>Date</th><th>Party</th><th>Narration</th><th className="td-right">Amount</th><th>Status</th><th></th></tr>
             </thead>
             <tbody>
               {loading
-                ? <SkeletonRows cols={6} />
+                ? <SkeletonRows cols={7} />
                 : rows.length
                   ? rows.map((v: any) => (
                       <tr key={v.id}>
@@ -150,9 +151,22 @@ function VoucherListTab({ apiCall, type, title }: {
                         <td className="text-[var(--text-3)] truncate" style={{ maxWidth: 180 }}>{v.narration || '—'}</td>
                         <td className="td-right">{fmt(v.total_amount ?? v.amount ?? 0)}</td>
                         <td><Badge status={(v.status || 'posted').toLowerCase()}/></td>
+                        <td onClick={e => e.stopPropagation()}>
+                          <Button variant="secondary" size="sm" icon={<Printer size={12}/>}
+                            onClick={() => setListPrintData({
+                              voucherNo:  v.voucher_no || '—',
+                              type:       type,
+                              date:       v.voucher_date || v.date,
+                              partyName:  v.party_name  || undefined,
+                              narration:  v.narration   || undefined,
+                              netTotal:   Number(v.total_amount ?? v.amount ?? 0),
+                              paidAmount: Number(v.total_amount ?? v.amount ?? 0),
+                            })}
+                          >Print</Button>
+                        </td>
                       </tr>
                     ))
-                  : <tr><td colSpan={6}><Empty message={`No ${title.toLowerCase()}s found`}/></td></tr>
+                  : <tr><td colSpan={7}><Empty message={`No ${title.toLowerCase()}s found`}/></td></tr>
               }
             </tbody>
           </table>

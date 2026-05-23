@@ -40,7 +40,7 @@ function addPrintHistory(job: PrintJob) {
 const PRINT_CSS: Record<PrintSize, string> = {
   'a4': `
     @page { size: A4; margin: 15mm; }
-    body { font-size: 12pt; }
+    body { font-size: 14pt; }
   `,
   'thermal-80': `
     @page { size: 80mm auto; margin: 3mm; }
@@ -78,12 +78,12 @@ export function usePrint() {
         <meta charset="utf-8"/>
         <style>
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          body { font-family: 'Segoe UI', Arial, sans-serif; color: #111; background: white; }
+          body { font-family: 'Segoe UI', Arial, sans-serif; color: #000; background: white; }
           ${PRINT_CSS[size]}
           @media print {
             .no-print { display: none !important; }
             table { border-collapse: collapse; width: 100%; }
-            th, td { padding: 4px 6px; border: 1px solid #ddd; }
+            th, td { padding: 4px 6px; border: 1px solid #222; }
             th { background: #f5f5f5; }
           }
           /* Watermark for duplicate copies */
@@ -145,7 +145,7 @@ export function usePrint() {
         <title>${filename}</title>
         <style>
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          body { font-family: 'Segoe UI', Arial, sans-serif; color: #111; background: white; }
+          body { font-family: 'Segoe UI', Arial, sans-serif; color: #000; background: white; }
           ${PRINT_CSS[size]}
           @media print { .no-print { display: none !important; } }
         </style>
@@ -156,7 +156,7 @@ export function usePrint() {
     doc.close()
 
     setTimeout(() => {
-      iframe.contentWindow?.print()
+      iframe.contentWindow?.print()  
       setTimeout(() => { try { document.body.removeChild(iframe) } catch {} }, 3000)
     }, 500)
   }, [])

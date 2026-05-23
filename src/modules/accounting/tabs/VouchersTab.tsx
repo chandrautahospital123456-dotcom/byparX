@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
-import { Plus, Trash2, CheckCircle2, RotateCcw } from 'lucide-react'
+import { Plus, Trash2, CheckCircle2, RotateCcw, Printer } from 'lucide-react'
 import { accountingAPI, partiesAPI } from '@/services/api'
 import useUIStore from '@/store/uiStore'
 import { Button, Modal, Badge, Pagination, SkeletonRows, Empty, SearchInput } from '@/components/ui'
@@ -92,6 +92,16 @@ export default function VouchersTab() {
                         <td><Badge status={v.status}/></td>
                         <td onClick={e => e.stopPropagation()}>
                           <div className="flex gap-1">
+                            <Button variant="secondary" size="sm" icon={<Printer size={12}/>}
+                              onClick={() => setPrintData({
+                                voucherNo:  v.voucher_no,
+                                type:       (v.voucher_type || 'JOURNAL') as any,
+                                date:       v.voucher_date,
+                                partyName:  v.party_name || undefined,
+                                narration:  v.narration  || undefined,
+                                netTotal:   Number(v.total_amount || 0),
+                              })}
+                            >Print</Button>
                             {v.status === 'draft' && (
                               <Button variant="primary" size="sm" icon={<CheckCircle2 size={12}/>}
                                 onClick={() => postVoucher(v.id)}>Post</Button>

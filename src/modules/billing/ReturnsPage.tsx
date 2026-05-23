@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { returnsAPI } from '@/services/api'
+import { Printer } from 'lucide-react'
+import { PrintPreviewModal } from '@/components/print'
+import type { PrintData } from '@/components/print'
 import useUIStore from '@/store/uiStore'
 import { Empty, SkeletonRows, Pagination, Badge } from '@/components/ui'
 import { fmt, fmtDate } from '@/utils'
@@ -11,7 +14,8 @@ export default function ReturnsPage() {
   const [list,    setList]    = useState<any[]>([])
   const [total,   setTotal]   = useState(0)
   const [page,    setPage]    = useState(1)
-  const [loading, setLoading] = useState(false)
+  const [loading,   setLoading]   = useState(false)
+  const [printData, setPrintData] = useState<PrintData | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -52,7 +56,7 @@ export default function ReturnsPage() {
             </thead>
             <tbody>
               {loading
-                ? <SkeletonRows cols={7} />
+                ? <SkeletonRows cols={8} />
                 : list.length
                   ? list.map((r: any) => (
                       <tr key={r.id}>
@@ -84,6 +88,18 @@ export default function ReturnsPage() {
                         <td>
                           <Badge status={(r.status || 'posted').toLowerCase()}/>
                         </td>
+                        <td onClick={e => e.stopPropagation()}>
+                          <Button variant="secondary" size="sm" icon={<Printer size={12}/>}
+                            onClick={() => setPrintData({
+                              voucherNo:   r.return_no || r.voucher_no || '—',
+                              type:        (r.type || r.voucher_type || 'RETURN') as any,
+                              date:        r.date || r.voucher_date,
+                              partyName:   r.party_name || undefined,
+                              referenceNo: r.original_invoice_no || r.reference_no || undefined,
+                              netTotal:    Number(r.amount ?? r.total_amount ?? 0),
+                            })}
+                          >Print</Button>
+                        </td>
                       </tr>
                     ))
                   : (
@@ -99,6 +115,11 @@ export default function ReturnsPage() {
         </div>
         <Pagination page={page} total={total} limit={LIMIT} onChange={setPage} />
       </div>
+      <PrintPreviewModal
+        data={printData}
+        open={!!printData}
+        onClose={() => setPrintData(null)}
+      />
     </div>
   )
 }

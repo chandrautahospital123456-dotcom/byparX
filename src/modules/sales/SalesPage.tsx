@@ -274,9 +274,23 @@ export default function SalesPage() {
                             <td className={`td-right ${Number(s.due_amount) > 0 ? 'text-amber-600' : ''}`}>{fmt(s.due_amount)}</td>
                             <td><Badge status={s.payment_mode}/></td>
                             <td><Badge status={s.status}/></td>
-                            <td onClick={e => e.stopPropagation()}>
+                            <td onClick={e => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                              <Button
+                                variant="secondary" size="sm"
+                                icon={<Printer size={12}/>}
+                                onClick={() => setPrintData({
+                                  voucherNo:   s.invoice_no,
+                                  type:        'SALE',
+                                  date:        s.date_ad,
+                                  paymentMode: s.payment_mode,
+                                  partyName:   s.party_name || 'Walk-in',
+                                  netTotal:    Number(s.net_total),
+                                  paidAmount:  Number(s.paid_amount),
+                                  dueAmount:   Number(s.due_amount),
+                                })}
+                              >Print</Button>
                               {s.status === 'active' && (
-                                <Button variant="danger" size="sm" onClick={() => cancelSale(s.id)}>Cancel</Button>
+                                <Button variant="danger" size="sm" style={{ marginLeft: 4 }} onClick={() => cancelSale(s.id)}>Cancel</Button>
                               )}
                             </td>
                           </tr>
@@ -297,6 +311,34 @@ export default function SalesPage() {
         onClose={() => setDetailId(null)}
         title={detail ? `Invoice: ${detail.invoice_no}` : 'Loading…'}
         size="lg"
+        footer={detail && (
+          <Button variant="primary" size="sm" icon={<Printer size={13}/>}
+            onClick={() => {
+              const d = detail
+              setDetailId(null)
+              // Use setTimeout so modal closes before print modal opens
+              setTimeout(() => setPrintData({
+                voucherNo:   d.invoice_no,
+                type:        'SALE',
+                date:        d.date_ad,
+                paymentMode: d.payment_mode,
+                partyName:   d.party_name || 'Walk-in',
+                items:       (d.items || []).map((it: any) => ({
+                  product_name: it.product_name, batch_no: it.batch_no,
+                  expiry:       it.expiry,        qty:      Number(it.qty),
+                  bonus:        Number(it.bonus)||0, rate:  Number(it.rate),
+                  discount_pct: Number(it.discount_pct)||0,
+                  cc_pct:       Number(it.cc_pct)||0,
+                  cc_amount:    Number(it.cc_amount)||0,
+                  amount:       Number(it.amount),
+                })),
+                netTotal:   Number(d.net_total),
+                paidAmount: Number(d.paid_amount),
+                dueAmount:  Number(d.due_amount),
+              }), 50)
+            }}
+          >Print Invoice</Button>
+        )}
       >
         {detail && (
           <div>

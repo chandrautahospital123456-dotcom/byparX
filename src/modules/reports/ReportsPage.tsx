@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Tabs, Button, Empty } from '@/components/ui'
+import { useState, useEffect, useCallback } from 'react'
+import { Tabs, Button, Empty, SkeletonRows } from '@/components/ui'
 import { reportsAPI, accountingAPI } from '@/services/api'
 import useUIStore from '@/store/uiStore'
 import { fmt, fmtDate, downloadCSV } from '@/utils'
@@ -322,49 +322,126 @@ function ExpiryReport() {
 }
 
 function PartyBalanceReport() {
-  const [rows, setRows]    = useState<any[]>([])
+  const [rows,    setRows]    = useState<any[]>([])
+  const [summary, setSummary] = useState<any>(null)
   const [loading, setLoading] = useState(false)
-  const [type, setType]    = useState('customer')
-  const { error }         = useUIStore()
+  const [type,    setType]    = useState('customer')
+  const { error }             = useUIStore()
 
-  async function generate() {
+  const load = useCallback(async (t: string) => {
     setLoading(true)
-    try { const r = await reportsAPI.partyBalance({ type }); const body = r.data?.data; setRows(Array.isArray(body) ? body : (body?.data ?? [])) }
-    catch (e: any) { error('Failed', e.message) }
+    try {
+      const r    = await reportsAPI.partyBalance({ type: t })
+      const body = r.data?.data ?? r.data ?? {}
+      // Backend returns { data: [...], total, total_balance, total_due }
+      const arr  = Array.isArray(body) ? body : (body?.data ?? [])
+      setRows(arr)
+      setSummary({ total_balance: body?.total_balance ?? 0, total_due: body?.total_due ?? 0, count: body?.total ?? arr.length })
+    } catch (e: any) { error('Load failed', e.message) }
     finally { setLoading(false) }
-  }
+  }, [])
+
+  // Auto-load on mount and when type changes
+  useEffect(() => { load(type) }, [type])
+
+  const totalBalance = summary?.total_balance ?? rows.reduce((s: number, r: any) => s + Number(r.balance || 0), 0)
+  const totalDue     = summary?.total_due     ?? rows.reduce((s: number, r: any) => s + Number(r.total_due || 0), 0)
 
   return (
     <>
-      <div className="flex items-center gap-3 mb-4">
-        <select className="erp-input" style={{ width: 150 }} value={type} onChange={e => setType(e.target.value)}>
+      {/* Filter bar */}
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
+        <select className="erp-input" style={{ width: 160 }} value={type}
+          onChange={e => setType(e.target.value)}>
           <option value="customer">Customers</option>
           <option value="supplier">Suppliers</option>
         </select>
-        <Button variant="primary" icon={<Search size={14}/>} loading={loading} onClick={generate}>Generate</Button>
-        {rows.length > 0 && <Button variant="secondary" size="sm" icon={<Download size={13}/>} onClick={() => downloadCSV(rows, 'party-balances')}>Export</Button>}
-      </div>
-      {rows.length > 0 && (
-        <div className="table-card">
-          <div className="overflow-x-auto">
-            <table className="erp-table">
-              <thead><tr><th>Code</th><th>Name</th><th>Phone</th><th className="td-right">Debit</th><th className="td-right">Credit</th><th className="td-right">Balance</th></tr></thead>
-              <tbody>
-                {rows.map((r: any, i: number) => (
-                  <tr key={i}>
-                    <td className="td-mono text-brand">{r.code}</td>
-                    <td className="font-semibold">{r.name}</td>
-                    <td>{r.phone || '—'}</td>
-                    <td className="td-right text-red-600">{fmt(r.debit || 0)}</td>
-                    <td className="td-right text-green-700">{fmt(r.credit || 0)}</td>
-                    <td className={`td-right font-bold font-mono ${Number(r.balance) > 0 ? 'text-amber-600' : 'text-green-700'}`}>{fmt(r.balance || r.current_balance || 0)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <Button variant="primary" icon={<Search size={14}/>} loading={loading} onClick={() => load(type)}>
+          Refresh
+        </Button>
+        {rows.length > 0 && (
+          <Button variant="secondary" size="sm" icon={<Download size={13}/>}
+            onClick={() => downloadCSV(rows, `party-balance-${type}`)}>
+            Export CSV
+          </Button>
+        )}
+        {/* Summary pills */}
+        {summary && (
+          <div className="flex gap-3 ml-auto text-sm">
+            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg px-3 py-1.5">
+              <span className="text-[var(--text-3)] mr-1">{type === 'customer' ? 'Total Receivable' : 'Total Payable'}:</span>
+              <span className={`font-bold font-mono ${Number(totalBalance) > 0 ? 'text-amber-600' : 'text-green-700'}`}>
+                {fmt(totalBalance)}
+              </span>
+            </div>
+            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg px-3 py-1.5">
+              <span className="text-[var(--text-3)] mr-1">Parties:</span>
+              <span className="font-bold">{summary.count}</span>
+            </div>
           </div>
+        )}
+      </div>
+
+      {/* Table */}
+      <div className="table-card">
+        <div className="overflow-x-auto">
+          <table className="erp-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>PAN</th>
+                <th className="td-right">Total Invoiced</th>
+                <th className="td-right">Total Paid</th>
+                <th className="td-right">Due</th>
+                <th className="td-right">Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading
+                ? <SkeletonRows cols={8} />
+                : rows.length
+                  ? rows.map((r: any, i: number) => (
+                      <tr key={i}>
+                        <td className="td-mono text-brand">{r.code || '—'}</td>
+                        <td className="font-semibold">{r.name}</td>
+                        <td>{r.phone || '—'}</td>
+                        <td className="td-mono text-xs">{r.pan_no || '—'}</td>
+                        <td className="td-right">{fmt(r.total_invoiced || 0)}</td>
+                        <td className="td-right text-green-700">{fmt(r.total_paid || 0)}</td>
+                        <td className="td-right text-red-600">{fmt(r.total_due || 0)}</td>
+                        <td className={`td-right font-bold font-mono ${
+                          Number(r.balance || r.current_balance || 0) > 0
+                            ? 'text-amber-600' : 'text-green-700'
+                        }`}>
+                          {fmt(r.balance ?? r.current_balance ?? 0)}
+                        </td>
+                      </tr>
+                    ))
+                  : (
+                      <tr>
+                        <td colSpan={8}>
+                          <Empty message={`No ${type}s found`} />
+                        </td>
+                      </tr>
+                    )
+              }
+            </tbody>
+            {!loading && rows.length > 0 && (
+              <tfoot>
+                <tr>
+                  <td colSpan={4} className="text-right font-bold text-xs pr-3 text-[var(--text-3)]">TOTALS</td>
+                  <td className="td-right font-bold font-mono">{fmt(rows.reduce((s: number, r: any) => s + Number(r.total_invoiced||0), 0))}</td>
+                  <td className="td-right font-bold font-mono text-green-700">{fmt(rows.reduce((s: number, r: any) => s + Number(r.total_paid||0), 0))}</td>
+                  <td className="td-right font-bold font-mono text-red-600">{fmt(totalDue)}</td>
+                  <td className={`td-right font-bold font-mono ${Number(totalBalance) > 0 ? 'text-amber-600' : 'text-green-700'}`}>{fmt(totalBalance)}</td>
+                </tr>
+              </tfoot>
+            )}
+          </table>
         </div>
-      )}
+      </div>
     </>
   )
 }

@@ -52,7 +52,7 @@ export interface PrintItem {
 }
 
 const TYPE_LABELS: Record<string, string> = {
-  SALE:             'TAX INVOICE',
+  SALE:             'INVOICE',
   PURCHASE:         'PURCHASE BILL',
   RECEIPT:          'RECEIPT VOUCHER',
   PAYMENT:          'PAYMENT VOUCHER',
@@ -79,32 +79,32 @@ const InvoiceTemplate = forwardRef<HTMLDivElement, { data: PrintData; size?: 'a4
         style={{
           fontFamily: "'Segoe UI', Arial, sans-serif",
           fontSize:   isA4 ? '12px' : '10px',
-          color:      '#111',
+          color:      '#000',
           background: '#fff',
           width:      size === 'a4' ? '100%' : size === 'thermal-80' ? '74mm' : '54mm',
           padding:    isA4 ? '0' : '3mm',
         }}
       >
         {/* ── Copy label (ORIGINAL / DUPLICATE) ──────────────────────────── */}
-        <div style={{ textAlign: 'right', fontSize: '9px', color: '#888', marginBottom: 4 }}>
+        <div style={{ textAlign: 'right', fontSize: '9px', color: '#555', marginBottom: 4 }}>
           {copyLabel}
         </div>
 
         {/* ── Company header ──────────────────────────────────────────────── */}
-        <div style={{ textAlign: 'center', borderBottom: '2px solid #111', paddingBottom: isA4 ? 12 : 6, marginBottom: isA4 ? 12 : 6 }}>
+        <div style={{ textAlign: 'center', borderBottom: '2px solid #000', paddingBottom: isA4 ? 12 : 6, marginBottom: isA4 ? 12 : 6 }}>
           {co?.name && (
             <div style={{ fontSize: isA4 ? '18px' : '13px', fontWeight: 'bold', letterSpacing: 1 }}>
               {co.name}
             </div>
           )}
           {(co as any)?.address && (
-            <div style={{ fontSize: '10px', color: '#444', marginTop: 2 }}>{(co as any).address}</div>
+            <div style={{ fontSize: '10px', color: '#000', marginTop: 2 }}>{(co as any).address}</div>
           )}
           {co?.pan_no && (
-            <div style={{ fontSize: '10px', color: '#444' }}>PAN: {co.pan_no}</div>
+            <div style={{ fontSize: '10px', color: '#000' }}>PAN: {co.pan_no}</div>
           )}
           {(co as any)?.phone && (
-            <div style={{ fontSize: '10px', color: '#444' }}>Tel: {(co as any).phone}</div>
+            <div style={{ fontSize: '10px', color: '#000' }}>Tel: {(co as any).phone}</div>
           )}
         </div>
 
@@ -120,7 +120,7 @@ const InvoiceTemplate = forwardRef<HTMLDivElement, { data: PrintData; size?: 'a4
             <div style={{ flex: 1 }}>
               {data.partyName && (
                 <>
-                  <div style={{ fontSize: '10px', color: '#666', marginBottom: 2 }}>
+                  <div style={{ fontSize: '10px', color: '#000', marginBottom: 2 }}>
                     {isSale ? 'Bill To' : 'Vendor'}
                   </div>
                   <div style={{ fontWeight: 'bold' }}>{data.partyName}</div>
@@ -135,22 +135,22 @@ const InvoiceTemplate = forwardRef<HTMLDivElement, { data: PrintData; size?: 'a4
               <table style={{ fontSize: '11px', marginLeft: 'auto' }}>
                 <tbody>
                   <tr>
-                    <td style={{ color: '#666', paddingRight: 8 }}>Invoice No:</td>
+                    <td style={{ color: '#000', paddingRight: 8 }}>Invoice No:</td>
                     <td style={{ fontWeight: 'bold' }}>{data.voucherNo}</td>
                   </tr>
                   <tr>
-                    <td style={{ color: '#666', paddingRight: 8 }}>Date:</td>
+                    <td style={{ color: '#000', paddingRight: 8 }}>Date:</td>
                     <td>{fmtDate(data.date)}</td>
                   </tr>
                   {data.paymentMode && (
                     <tr>
-                      <td style={{ color: '#666', paddingRight: 8 }}>Payment:</td>
+                      <td style={{ color: '#000', paddingRight: 8 }}>Payment:</td>
                       <td style={{ textTransform: 'capitalize' }}>{data.paymentMode}</td>
                     </tr>
                   )}
                   {data.referenceNo && (
                     <tr>
-                      <td style={{ color: '#666', paddingRight: 8 }}>Ref:</td>
+                      <td style={{ color: '#000', paddingRight: 8 }}>Ref:</td>
                       <td>{data.referenceNo}</td>
                     </tr>
                   )}
@@ -174,7 +174,7 @@ const InvoiceTemplate = forwardRef<HTMLDivElement, { data: PrintData; size?: 'a4
             fontSize: isA4 ? '11px' : '9px', marginBottom: isA4 ? 12 : 6,
           }}>
             <thead>
-              <tr style={{ background: '#f5f5f5', borderTop: '1px solid #ccc', borderBottom: '1px solid #ccc' }}>
+              <tr style={{ background: '#f5f5f5', borderTop: '1px solid #000', borderBottom: '1px solid #000' }}>
                 <th style={{ padding: '4px 4px', textAlign: 'left' }}>#</th>
                 <th style={{ padding: '4px 4px', textAlign: 'left' }}>Item</th>
                 {!isThermal && <th style={{ padding: '4px 4px', textAlign: 'left' }}>Batch/Exp</th>}
@@ -192,13 +192,13 @@ const InvoiceTemplate = forwardRef<HTMLDivElement, { data: PrintData; size?: 'a4
                   <td style={{ padding: '3px 4px' }}>
                     <div>{item.product_name}</div>
                     {isThermal && item.batch_no && (
-                      <div style={{ fontSize: '8px', color: '#666' }}>
+                      <div style={{ fontSize: '8px', color: '#000' }}>
                         {item.batch_no}{item.expiry ? ` Exp:${item.expiry}` : ''}
                       </div>
                     )}
                   </td>
                   {!isThermal && (
-                    <td style={{ padding: '3px 4px', fontSize: '10px', color: '#555' }}>
+                    <td style={{ padding: '3px 4px', fontSize: '10px', color: '#000' }}>
                       {item.batch_no || '—'}
                       {item.expiry && <><br/><span style={{ fontSize: '9px' }}>{item.expiry}</span></>}
                     </td>
@@ -220,19 +220,19 @@ const InvoiceTemplate = forwardRef<HTMLDivElement, { data: PrintData; size?: 'a4
             <tbody>
               {data.subtotal !== undefined && data.subtotal !== data.netTotal && (
                 <tr>
-                  <td style={{ paddingRight: 12, color: '#666' }}>Subtotal</td>
+                  <td style={{ paddingRight: 12, color: '#000' }}>Subtotal</td>
                   <td style={{ textAlign: 'right' }}>{fmt(data.subtotal)}</td>
                 </tr>
               )}
               {(data.discountAmt ?? 0) > 0 && (
-                <tr style={{ color: '#d33' }}>
+                <tr style={{ color: '#000' }}>
                   <td style={{ paddingRight: 12 }}>Discount</td>
                   <td style={{ textAlign: 'right' }}>−{fmt(data.discountAmt)}</td>
                 </tr>
               )}
               {(data.ccAmount ?? 0) > 0 && (
                 <tr>
-                  <td style={{ paddingRight: 12, color: '#666' }}>CC Charge</td>
+                  <td style={{ paddingRight: 12, color: '#000' }}>CC Charge</td>
                   <td style={{ textAlign: 'right' }}>{fmt(data.ccAmount)}</td>
                 </tr>
               )}
@@ -241,13 +241,13 @@ const InvoiceTemplate = forwardRef<HTMLDivElement, { data: PrintData; size?: 'a4
                 <td style={{ textAlign: 'right', paddingTop: 4 }}>{fmt(data.netTotal)}</td>
               </tr>
               {(data.paidAmount ?? 0) > 0 && (
-                <tr style={{ color: '#1a7a3a' }}>
+                <tr style={{ color: '#000' }}>
                   <td style={{ paddingRight: 12 }}>Paid</td>
                   <td style={{ textAlign: 'right' }}>{fmt(data.paidAmount)}</td>
                 </tr>
               )}
               {(data.dueAmount ?? 0) > 0 && (
-                <tr style={{ color: '#c55', fontWeight: 'bold' }}>
+                <tr style={{ color: '#000', fontWeight: 'bold' }}>
                   <td style={{ paddingRight: 12 }}>Balance Due</td>
                   <td style={{ textAlign: 'right' }}>{fmt(data.dueAmount)}</td>
                 </tr>
@@ -266,16 +266,16 @@ const InvoiceTemplate = forwardRef<HTMLDivElement, { data: PrintData; size?: 'a4
         {/* ── Signature section (A4 only) ─────────────────────────────────── */}
         {isA4 && (
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 32, borderTop: '1px solid #eee', paddingTop: 16 }}>
-            <div style={{ textAlign: 'center', fontSize: '10px', color: '#666' }}>
-              <div style={{ borderTop: '1px solid #555', width: 120, marginBottom: 4 }}/>
+            <div style={{ textAlign: 'center', fontSize: '10px', color: '#000' }}>
+              <div style={{ borderTop: '1px solid #000', width: 120, marginBottom: 4 }}/>
               Prepared By
             </div>
-            <div style={{ textAlign: 'center', fontSize: '10px', color: '#666' }}>
-              <div style={{ borderTop: '1px solid #555', width: 120, marginBottom: 4 }}/>
+            <div style={{ textAlign: 'center', fontSize: '10px', color: '#000' }}>
+              <div style={{ borderTop: '1px solid #000', width: 120, marginBottom: 4 }}/>
               Checked By
             </div>
-            <div style={{ textAlign: 'center', fontSize: '10px', color: '#666' }}>
-              <div style={{ borderTop: '1px solid #555', width: 120, marginBottom: 4 }}/>
+            <div style={{ textAlign: 'center', fontSize: '10px', color: '#000' }}>
+              <div style={{ borderTop: '1px solid #000', width: 120, marginBottom: 4 }}/>
               Authorised By
             </div>
           </div>

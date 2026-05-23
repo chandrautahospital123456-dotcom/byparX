@@ -180,9 +180,23 @@ export default function PurchasePage() {
                             <td className={`td-right ${Number(p.due_amount) > 0 ? 'text-amber-600' : ''}`}>{fmt(p.due_amount)}</td>
                             <td><Badge status={p.payment_mode}/></td>
                             <td><Badge status={p.status || 'active'}/></td>
+                            <td onClick={e => e.stopPropagation()}>
+                              <Button variant="secondary" size="sm" icon={<Printer size={12}/>}
+                                onClick={() => setPrintData({
+                                  voucherNo:   p.bill_no,
+                                  type:        'PURCHASE',
+                                  date:        p.date_ad,
+                                  paymentMode: p.payment_mode,
+                                  partyName:   p.party_name || '—',
+                                  netTotal:    Number(p.net_total),
+                                  paidAmount:  Number(p.paid_amount),
+                                  dueAmount:   Number(p.due_amount),
+                                })}
+                              >Print</Button>
+                            </td>
                           </tr>
                         ))
-                      : <tr><td colSpan={8}><Empty message="No purchases found"/></td></tr>
+                      : <tr><td colSpan={9}><Empty message="No purchases found"/></td></tr>
                   }
                 </tbody>
               </table>
@@ -192,7 +206,31 @@ export default function PurchasePage() {
         </div>
       )}
 
-      <Modal open={!!detailId} onClose={() => setDetailId(null)} title={detail ? `Purchase: ${detail.bill_no}` : 'Loading…'} size="lg">
+      <Modal open={!!detailId} onClose={() => setDetailId(null)} title={detail ? `Purchase: ${detail.bill_no}` : 'Loading…'} size="lg"
+        footer={detail && (
+          <Button variant="primary" size="sm" icon={<Printer size={13}/>}
+            onClick={() => {
+              const d = detail
+              setDetailId(null)
+              setTimeout(() => setPrintData({
+                voucherNo:   d.bill_no,
+                type:        'PURCHASE',
+                date:        d.date_ad,
+                paymentMode: d.payment_mode,
+                partyName:   d.party_name || '—',
+                items: (d.items || []).map((it: any) => ({
+                  product_name: it.product_name, batch_no: it.batch_no,
+                  expiry: it.expiry, qty: Number(it.qty),
+                  bonus: Number(it.bonus)||0, rate: Number(it.rate),
+                  amount: Number(it.amount),
+                })),
+                netTotal:   Number(d.net_total),
+                paidAmount: Number(d.paid_amount),
+                dueAmount:  Number(d.due_amount),
+              }), 50)
+            }}>Print Bill</Button>
+        )}
+      >
         {detail && (
           <div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
